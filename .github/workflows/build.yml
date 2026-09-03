@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: kivy/buildozer:latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -28,3 +30,13 @@ jobs:
         with:
           name: YT-Downloader-Pro-APK
           path: bin/*.apk
+
+      - name: Publish Release with APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.0
+          name: YouTube Downloader Pro v2.0
+          body: "Descarga directa de la aplicación Android instalable (.apk)"
+          files: bin/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

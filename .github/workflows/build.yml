@@ -11,30 +11,28 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Get Date
-        id: get-date
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies & Buildozer
         run: |
-          echo "date=$(date -u +'%Y%m%d')" >> $GITHUB_OUTPUT
-        shell: bash
+          sudo apt-get update
+          sudo apt-get install -y build-essential ccache git python3-pip python3-setuptools \
+            python3-dev libffi-dev libssl-dev libtinfo5 openjdk-17-jdk zip unzip \
+            autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev \
+            cmake libsqlite3-dev
+          pip install --upgrade pip setuptools buildozer cython
 
-      - name: Cache Buildozer global directory
-        uses: actions/cache@v3
-        with:
-          path: ~/.buildozer
-          key: buildozer-global-${{ runner.os }}-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            buildozer-global-${{ runner.os }}-
-
-      - name: Build with Buildozer
-        uses: ArtemSuts/buildozer-action@v1
-        with:
-          workdir: .
-          buildozer_version: stable
+      - name: Build APK with Buildozer
+        run: |
+          buildozer -v android debug
 
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: YT-Downloader-Pro-APK
           path: bin/*.apk

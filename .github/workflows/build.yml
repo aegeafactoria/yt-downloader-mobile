@@ -15,6 +15,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Configure safe directory
+        run: |
+          git config --global --add safe.directory "*"
+
       - name: Build APK with Buildozer
         run: |
           buildozer -v android debug

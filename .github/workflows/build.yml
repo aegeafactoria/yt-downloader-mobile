@@ -7,26 +7,17 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install system dependencies & Buildozer
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential ccache git libffi-dev libssl-dev libtinfo5 openjdk-17-jdk zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev cmake libsqlite3-dev
-          python -m pip install --upgrade pip setuptools "buildozer>=1.5.0" "cython<3.0.0"
-
       - name: Build APK with Buildozer
-        run: |
-          yes | buildozer -v android debug
+        uses: jonasundderwolf/buildozer-action@v1
+        with:
+          workdir: .
+          buildozer_version: master
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4

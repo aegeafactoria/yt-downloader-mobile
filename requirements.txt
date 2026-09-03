@@ -1,0 +1,9 @@
+# Dependencias principales para YouTube Downloader Pro
+kivy>=2.2.0
+kivymd>=1.1.1,<2.0.0
+yt-dlp
+pillow
+plyer
+certifi
+urllib3
+requests

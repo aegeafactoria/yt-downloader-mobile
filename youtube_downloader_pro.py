@@ -9,12 +9,13 @@ from datetime import datetime
 # Gestor de dependencias y captura global de excepciones tempranas
 try:
     import dependency_manager
-    def _global_crash_handler(exctype, value, tb):
-        err_str = "".join(traceback.format_exception(exctype, value, tb))
-        dependency_manager.log_msg(f"[CRASH AL INICIAR]:\n{err_str}")
-        dependency_manager.show_native_error_popup("Crash al Iniciar - YouTube Downloader Pro", err_str)
-    sys.excepthook = _global_crash_handler
-    dependency_manager.ensure_dependencies(auto_install=True)
+    if not dependency_manager.is_android():
+        def _global_crash_handler(exctype, value, tb):
+            err_str = "".join(traceback.format_exception(exctype, value, tb))
+            dependency_manager.log_msg(f"[CRASH AL INICIAR]:\n{err_str}")
+            dependency_manager.show_native_error_popup("Crash al Iniciar - YouTube Downloader Pro", err_str)
+        sys.excepthook = _global_crash_handler
+        dependency_manager.ensure_dependencies(auto_install=True)
 except Exception as _e:
     pass
 
@@ -772,14 +773,20 @@ class YTDownloaderApp(MDApp):
         if not yt_dlp:
             raise Exception("La librería yt-dlp no está instalada.")
 
+        # Comprobar disponibilidad de FFmpeg
+        ff_ok = False
+        ff_dir = None
+        try:
+            import dependency_manager
+            ff_ok, ff_path = dependency_manager.check_ffmpeg()
+            if ff_ok and ff_path:
+                ff_dir = os.path.dirname(ff_path)
+        except Exception:
+            pass
+
         opts = {
             'format': 'bestaudio/best',
             'outtmpl': os.path.join(path, '%(title)s.%(ext)s'),
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': quality,
-            }],
             'noplaylist': noplaylist,
             'extractor_args': {
                 'youtube': {
@@ -792,14 +799,14 @@ class YTDownloaderApp(MDApp):
             'nocheckcertificate': True,
         }
 
-        # Añadir ubicación explícita de FFmpeg si está disponible
-        try:
-            import dependency_manager
-            ff_ok, ff_path = dependency_manager.check_ffmpeg()
-            if ff_ok and ff_path:
-                opts['ffmpeg_location'] = os.path.dirname(ff_path)
-        except Exception:
-            pass
+        if ff_ok:
+            opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': quality,
+            }]
+            if ff_dir:
+                opts['ffmpeg_location'] = ff_dir
 
         with yt_dlp.YoutubeDL(opts) as ydl:
             res = ydl.download([url])
@@ -810,13 +817,25 @@ class YTDownloaderApp(MDApp):
         if not yt_dlp:
             raise Exception("La librería yt-dlp no está instalada.")
 
-        # Best video under or equal to chosen height + best audio
-        fmt = f"bestvideo[height<={quality}]+bestaudio/best[height<={quality}]/best"
+        # Comprobar disponibilidad de FFmpeg
+        ff_ok = False
+        ff_dir = None
+        try:
+            import dependency_manager
+            ff_ok, ff_path = dependency_manager.check_ffmpeg()
+            if ff_ok and ff_path:
+                ff_dir = os.path.dirname(ff_path)
+        except Exception:
+            pass
+
+        if ff_ok:
+            fmt = f"bestvideo[height<={quality}]+bestaudio/best[height<={quality}]/best"
+        else:
+            fmt = f"best[height<={quality}]/best"
 
         opts = {
             'format': fmt,
             'outtmpl': os.path.join(path, '%(title)s.%(ext)s'),
-            'merge_output_format': 'mp4',
             'noplaylist': noplaylist,
             'extractor_args': {
                 'youtube': {
@@ -829,14 +848,10 @@ class YTDownloaderApp(MDApp):
             'nocheckcertificate': True,
         }
 
-        # Añadir ubicación explícita de FFmpeg si está disponible
-        try:
-            import dependency_manager
-            ff_ok, ff_path = dependency_manager.check_ffmpeg()
-            if ff_ok and ff_path:
-                opts['ffmpeg_location'] = os.path.dirname(ff_path)
-        except Exception:
-            pass
+        if ff_ok:
+            opts['merge_output_format'] = 'mp4'
+            if ff_dir:
+                opts['ffmpeg_location'] = ff_dir
 
         with yt_dlp.YoutubeDL(opts) as ydl:
             res = ydl.download([url])

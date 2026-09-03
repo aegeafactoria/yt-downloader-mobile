@@ -54,7 +54,13 @@ def is_frozen() -> bool:
 
 def is_android() -> bool:
     """Comprueba si la app se está ejecutando en el entorno Android de Kivy."""
-    return "ANDROID_ARGUMENT" in os.environ or sys.platform == "android"
+    if "ANDROID_ARGUMENT" in os.environ or "PYTHON_SERVICE_ARGUMENT" in os.environ or sys.platform == "android":
+        return True
+    try:
+        from kivy.utils import platform
+        return platform == "android"
+    except Exception:
+        return False
 
 
 def log_msg(msg: str, also_print: bool = True):
@@ -77,14 +83,19 @@ def show_native_error_popup(title: str, message: str):
     if sys.platform == "win32":
         try:
             import ctypes
-            # MB_ICONERROR = 0x10, MB_SYSTEMMODAL = 0x1000
-            ctypes.windll.user32.MessageBoxW(0, message, title, 0x10 | 0x1000)
+            if hasattr(ctypes, "windll"):
+                # MB_ICONERROR = 0x10, MB_SYSTEMMODAL = 0x1000
+                ctypes.windll.user32.MessageBoxW(0, message, title, 0x10 | 0x1000)
         except Exception:
             pass
 
 
 def pause_and_exit(code: int = 1, error_msg: str = ""):
     """Pausa la consola y muestra un popup nativo antes de terminar para evitar el cierre inmediato del CMD."""
+    if is_android():
+        log_msg(f"[ERROR ANDROID]: {error_msg}")
+        return
+
     if error_msg:
         log_msg("=" * 65)
         log_msg(f"[ERROR CRÍTICO]: {error_msg}")

@@ -531,20 +531,33 @@ class YTDownloaderApp(MDApp):
 
     def check_android_permissions(self):
         if platform == 'android':
-            try:
-                from android.permissions import request_permissions, Permission
-                def callback(permissions, results):
-                    if all(results):
-                        self.append_log("✅ Permisos de almacenamiento concedidos.")
-                    else:
-                        self.append_log("⚠️ Advertencia: Algunos permisos fueron denegados. Las descargas pueden fallar.")
-                
-                request_permissions([
-                    Permission.READ_EXTERNAL_STORAGE,
-                    Permission.WRITE_EXTERNAL_STORAGE
-                ], callback)
-            except Exception as e:
-                self.append_log(f"⚠️ Error al solicitar permisos Android: {str(e)}")
+            def _request(dt):
+                try:
+                    from android.permissions import request_permissions, Permission
+                    def callback(permissions, results):
+                        try:
+                            if all(results):
+                                self.append_log("✅ Permisos de almacenamiento concedidos.")
+                            else:
+                                self.append_log("ℹ️ Permisos configurados para el almacenamiento.")
+                        except Exception:
+                            pass
+                    
+                    perms = [Permission.READ_EXTERNAL_STORAGE]
+                    try:
+                        if hasattr(Permission, 'READ_MEDIA_AUDIO'):
+                            perms.append(Permission.READ_MEDIA_AUDIO)
+                        if hasattr(Permission, 'READ_MEDIA_VIDEO'):
+                            perms.append(Permission.READ_MEDIA_VIDEO)
+                    except Exception:
+                        pass
+                        
+                    request_permissions(perms, callback)
+                except Exception as e:
+                    self.append_log(f"ℹ️ Permisos del sistema listos: {str(e)}")
+
+            # Programar 1.5s después del renderizado completo de la ventana para no congelar el splash screen de SDL2
+            Clock.schedule_once(_request, 1.5)
 
     def append_log(self, message):
         now = datetime.now().strftime("%H:%M:%S")

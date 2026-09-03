@@ -14,10 +14,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build APK with Buildozer
-        uses: jonasundderwolf/buildozer-action@v1
+        uses: MobileDevOps/buildozer-action@v1
         with:
-          workdir: .
-          buildozer_version: master
+          command: buildozer -v android debug
+          subfolder: .
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4

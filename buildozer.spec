@@ -20,7 +20,7 @@ version = 2.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy==2.3.0,kivymd==1.1.1,yt_dlp,certifi,urllib3,idna,charset_normalizer,ffmpeg,plyer,pillow,requests
+requirements = python3,kivy==2.3.0,kivymd==1.1.1,yt-dlp,certifi,urllib3,idna,charset_normalizer,plyer,pillow,requests
 
 # (str) Supported orientations (one of landscape, portrait or all)
 orientation = portrait
@@ -47,7 +47,7 @@ android.minapi = 21
 # android.ndk_path = 
 
 # (list) The Android architectures to build for (arm64-v8a, armeabi-v7a, x86, x86_64)
-android.archs = arm64-v8a, armeabi-v7a
+android.archs = arm64-v8a
 
 # (bool) Allow backup
 android.allow_backup = True

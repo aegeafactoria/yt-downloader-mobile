@@ -536,10 +536,12 @@ class YTDownloaderApp(MDApp):
             def _request(dt):
                 try:
                     from android.permissions import request_permissions
+                    def _cb(permissions, grant_results):
+                        pass
                     request_permissions([
                         "android.permission.READ_EXTERNAL_STORAGE",
                         "android.permission.WRITE_EXTERNAL_STORAGE"
-                    ])
+                    ], _cb)
                 except Exception:
                     pass
 

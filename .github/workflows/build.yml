@@ -38,5 +38,6 @@ jobs:
           name: YouTube Downloader Pro v2.0
           body: "Descarga directa de la aplicación Android instalable (.apk)"
           files: bin/*.apk
+          overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

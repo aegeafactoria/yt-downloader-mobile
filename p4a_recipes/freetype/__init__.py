@@ -7,8 +7,8 @@ import sh
 
 
 class FreetypeRecipe(Recipe):
-    version = '2.14.1'
-    url = 'https://github.com/freetype/freetype/archive/refs/tags/VER-2-14-1.tar.gz'
+    version = '2.10.4'
+    url = 'https://raw.githubusercontent.com/aegeafactoria/yt-downloader-mobile/main/p4a_recipes/freetype/freetype-2.10.4.tar.gz'
     built_libraries = {'libfreetype.so': 'objs/.libs'}
 
     def get_recipe_env(self, arch=None, with_harfbuzz=False):

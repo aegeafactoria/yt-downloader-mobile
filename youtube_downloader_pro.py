@@ -22,11 +22,8 @@ except Exception as _e:
 # Silence Kivy verbose framework startup logs in the console
 os.environ["KIVY_NO_CONSOLELOG"] = "1"
 
-# Try to import yt_dlp
-try:
-    import yt_dlp
-except ImportError:
-    yt_dlp = None
+# Global yt_dlp reference loaded asynchronously
+yt_dlp = None
 
 # Kivy imports
 import kivy
@@ -483,12 +480,17 @@ class YTDownloaderApp(MDApp):
         # Check permissions on Android
         self.check_android_permissions()
         
-        # Log system status
-        if yt_dlp is None:
-            self.append_log("⚠️ ADVERTENCIA: Módulo 'yt-dlp' no instalado en este entorno de Python.")
-            self.append_log("Para probar localmente, instálalo con: pip install yt-dlp")
-        else:
+        # Load yt-dlp asynchronously in background to avoid blocking Android startup UI thread
+        threading.Thread(target=self._load_ytdlp_async, daemon=True).start()
+
+    def _load_ytdlp_async(self):
+        global yt_dlp
+        try:
+            import yt_dlp as _yt
+            yt_dlp = _yt
             self.append_log("ℹ️ Sistema listo. yt-dlp cargado correctamente.")
+        except Exception as e:
+            self.append_log(f"⚠️ Módulo 'yt-dlp' no disponible: {str(e)}")
 
         # Diagnóstico y comprobación de actualizaciones en Desktop
         if platform != 'android':

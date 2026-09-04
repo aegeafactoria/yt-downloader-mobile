@@ -8,8 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: kivy/buildozer:latest
     permissions:
       contents: write
 
@@ -17,13 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure safe directory
-        run: |
-          git config --global --add safe.directory "*"
-
       - name: Build APK with Buildozer
-        run: |
-          buildozer -v android debug
+        uses: MobileDevOps/buildozer-action@v1
+        with:
+          command: buildozer -v android debug
+          subfolder: .
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4

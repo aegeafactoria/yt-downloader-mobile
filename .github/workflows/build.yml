@@ -7,7 +7,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container:
+      image: kivy/buildozer:latest
     permissions:
       contents: write
 
@@ -15,39 +17,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install system dependencies & Buildozer
+      - name: Configure safe directory
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential ccache git libffi-dev libssl-dev libtinfo5 openjdk-17-jdk zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev cmake libsqlite3-dev
-          pip install --upgrade pip setuptools "buildozer>=1.5.0" "cython==0.29.36"
+          git config --global --add safe.directory "*"
 
       - name: Build APK with Buildozer
         run: |
           buildozer -v android debug
 
-      - name: Upload Build Logs if Failed
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: buildozer-debug-logs
-          path: |
-            .buildozer/logs/
-
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: YT-Downloader-Pro-APK
           path: bin/*.apk
 
       - name: Publish Release with APK
         uses: softprops/action-gh-release@v2
-        if: success()
         with:
           tag_name: v2.0
           name: YouTube Downloader Pro v2.0

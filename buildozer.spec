@@ -22,6 +22,10 @@ version = 2.0
 # comma separated e.g. requirements = sqlite3,kivy
 requirements = python3,kivy,kivymd,yt-dlp,certifi,urllib3,idna,charset_normalizer,plyer,pillow,requests
 
+# (str) Custom p4a local recipes directory
+p4a.local_recipes = ./p4a_recipes
+
+
 # (str) Supported orientations (one of landscape, portrait or all)
 orientation = portrait
 

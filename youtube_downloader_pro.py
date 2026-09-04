@@ -483,15 +483,6 @@ class YTDownloaderApp(MDApp):
         # Load yt-dlp asynchronously in background to avoid blocking Android startup UI thread
         threading.Thread(target=self._load_ytdlp_async, daemon=True).start()
 
-    def _load_ytdlp_async(self):
-        global yt_dlp
-        try:
-            import yt_dlp as _yt
-            yt_dlp = _yt
-            self.append_log("ℹ️ Sistema listo. yt-dlp cargado correctamente.")
-        except Exception as e:
-            self.append_log(f"⚠️ Módulo 'yt-dlp' no disponible: {str(e)}")
-
         # Diagnóstico y comprobación de actualizaciones en Desktop
         if platform != 'android':
             try:
@@ -508,6 +499,15 @@ class YTDownloaderApp(MDApp):
                     self.append_log("✨ Aplicación iniciada en modo ejecutable (.EXE).")
             except Exception as e:
                 self.append_log(f"⚠️ Nota de diagnóstico: {str(e)}")
+
+    def _load_ytdlp_async(self):
+        global yt_dlp
+        try:
+            import yt_dlp as _yt
+            yt_dlp = _yt
+            self.append_log("ℹ️ Sistema listo. yt-dlp cargado correctamente.")
+        except Exception as e:
+            self.append_log(f"⚠️ Módulo 'yt-dlp' no disponible: {str(e)}")
 
     def _check_updates_background(self):
         try:

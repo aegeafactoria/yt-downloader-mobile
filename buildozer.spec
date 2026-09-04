@@ -20,7 +20,7 @@ version = 2.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,kivymd,yt-dlp,certifi,urllib3,idna,charset_normalizer,plyer,pillow,requests
+requirements = python3,kivy,kivymd==1.2.0,yt-dlp,certifi,urllib3,idna,charset_normalizer,plyer,pillow,requests
 
 # (str) Custom p4a local recipes directory
 p4a.local_recipes = ./p4a_recipes
@@ -33,7 +33,8 @@ orientation = portrait
 fullscreen = 0
 
 # (list) Permissions
-android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
+android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, READ_MEDIA_VIDEO, READ_MEDIA_AUDIO
+
 
 # (int) Target Android API, should be as high as possible.
 android.api = 33

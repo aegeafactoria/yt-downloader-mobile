@@ -19,8 +19,9 @@ try:
 except Exception as _e:
     pass
 
-# Silence Kivy verbose framework startup logs in the console
-os.environ["KIVY_NO_CONSOLELOG"] = "1"
+# Silence Kivy verbose framework startup logs only on desktop
+if "ANDROID_ARGUMENT" not in os.environ and sys.platform != "android":
+    os.environ["KIVY_NO_CONSOLELOG"] = "1"
 
 # Global yt_dlp reference loaded asynchronously
 yt_dlp = None
@@ -36,19 +37,36 @@ from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 
-# KivyMD UIX widgets (importados explícitamente para registro en Kivy Factory y PyInstaller)
+# KivyMD UIX widgets (importados explícitamente con compatibilidad entre versiones)
 from kivymd.app import MDApp
 from kivymd.uix.screen import MDScreen
-from kivymd.uix.toolbar import MDTopAppBar
+try:
+    from kivymd.uix.toolbar import MDTopAppBar
+except (ImportError, ModuleNotFoundError):
+    try:
+        from kivymd.uix.appbar import MDTopAppBar
+    except (ImportError, ModuleNotFoundError):
+        from kivymd.uix.boxlayout import MDBoxLayout as MDTopAppBar
+
 from kivymd.uix.card import MDCard
 from kivymd.uix.textfield import MDTextField
-from kivymd.uix.button import (
-    MDFlatButton,
-    MDRoundFlatIconButton,
-    MDFillRoundFlatIconButton,
-    MDFloatingActionButton,
-    MDIconButton,
-)
+try:
+    from kivymd.uix.button import (
+        MDFlatButton,
+        MDRoundFlatIconButton,
+        MDFillRoundFlatIconButton,
+        MDFloatingActionButton,
+        MDIconButton,
+    )
+except (ImportError, ModuleNotFoundError):
+    from kivymd.uix.button import (
+        MDRoundFlatIconButton,
+        MDFillRoundFlatIconButton,
+        MDFloatingActionButton,
+        MDIconButton,
+    )
+    MDFlatButton = MDRoundFlatIconButton
+
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.label import MDLabel, MDIcon
 from kivymd.uix.selectioncontrol import MDCheckbox
@@ -552,19 +570,30 @@ class YTDownloaderApp(MDApp):
         full_msg = f"[{now}] {message}\n"
         
         def _update(dt):
-            self.root.ids.log_text.text += full_msg
-            # Scroll to bottom
-            self.root.ids.log_scroll.scroll_y = 0
+            if hasattr(self, 'root') and self.root and hasattr(self.root, 'ids') and 'log_text' in self.root.ids:
+                self.root.ids.log_text.text += full_msg
+                if 'log_scroll' in self.root.ids:
+                    self.root.ids.log_scroll.scroll_y = 0
         Clock.schedule_once(_update)
 
     def set_status(self, text):
-        Clock.schedule_once(lambda dt: setattr(self.root.ids.status_label, 'text', text))
+        def _set(dt):
+            if hasattr(self, 'root') and self.root and hasattr(self.root, 'ids') and 'status_label' in self.root.ids:
+                self.root.ids.status_label.text = text
+        Clock.schedule_once(_set)
 
     def set_stats(self, text):
-        Clock.schedule_once(lambda dt: setattr(self.root.ids.stats_label, 'text', text))
+        def _set(dt):
+            if hasattr(self, 'root') and self.root and hasattr(self.root, 'ids') and 'stats_label' in self.root.ids:
+                self.root.ids.stats_label.text = text
+        Clock.schedule_once(_set)
 
     def set_progress(self, val):
-        Clock.schedule_once(lambda dt: setattr(self.root.ids.progress_bar, 'value', val))
+        def _set(dt):
+            if hasattr(self, 'root') and self.root and hasattr(self.root, 'ids') and 'progress_bar' in self.root.ids:
+                self.root.ids.progress_bar.value = val
+        Clock.schedule_once(_set)
+
 
     def show_alert(self, title, text):
         def _show(dt):

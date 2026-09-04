@@ -9,7 +9,9 @@ import sh
 class FreetypeRecipe(Recipe):
     version = '2.10.4'
     url = 'https://raw.githubusercontent.com/aegeafactoria/yt-downloader-mobile/main/p4a_recipes/freetype/freetype-2.10.4.tar.gz'
+    archive_root = 'freetype-2.10.4'
     built_libraries = {'libfreetype.so': 'objs/.libs'}
+
 
     def get_recipe_env(self, arch=None, with_harfbuzz=False):
         env = super().get_recipe_env(arch)

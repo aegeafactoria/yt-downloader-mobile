@@ -535,31 +535,15 @@ class YTDownloaderApp(MDApp):
         if platform == 'android':
             def _request(dt):
                 try:
-                    from android.permissions import request_permissions, Permission
-                    def callback(permissions, results):
-                        try:
-                            if all(results):
-                                self.append_log("✅ Permisos de almacenamiento concedidos.")
-                            else:
-                                self.append_log("ℹ️ Permisos configurados para el almacenamiento.")
-                        except Exception:
-                            pass
-                    
-                    perms = [Permission.READ_EXTERNAL_STORAGE]
-                    try:
-                        if hasattr(Permission, 'READ_MEDIA_AUDIO'):
-                            perms.append(Permission.READ_MEDIA_AUDIO)
-                        if hasattr(Permission, 'READ_MEDIA_VIDEO'):
-                            perms.append(Permission.READ_MEDIA_VIDEO)
-                    except Exception:
-                        pass
-                        
-                    request_permissions(perms, callback)
-                except Exception as e:
-                    self.append_log(f"ℹ️ Permisos del sistema listos: {str(e)}")
+                    from android.permissions import request_permissions
+                    request_permissions([
+                        "android.permission.READ_EXTERNAL_STORAGE",
+                        "android.permission.WRITE_EXTERNAL_STORAGE"
+                    ])
+                except Exception:
+                    pass
 
-            # Programar 1.5s después del renderizado completo de la ventana para no congelar el splash screen de SDL2
-            Clock.schedule_once(_request, 1.5)
+            Clock.schedule_once(_request, 2.0)
 
     def append_log(self, message):
         now = datetime.now().strftime("%H:%M:%S")

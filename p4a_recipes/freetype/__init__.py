@@ -86,8 +86,10 @@ class FreetypeRecipe(Recipe):
         info('Configure args are:\n\t-{}'.format('\n\t-'.join(config_args)))
 
         with current_directory(self.get_build_dir(arch.arch)):
+            shprint(sh.Command('./autogen.sh'), _env=env)
             configure = sh.Command('./configure')
             shprint(configure, *config_args, _env=env)
+
             shprint(sh.make, '-j', str(cpu_count()), _env=env)
 
             if not with_harfbuzz and harfbuzz_in_recipes:

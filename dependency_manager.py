@@ -222,12 +222,57 @@ def check_ffmpeg() -> Tuple[bool, Optional[str]]:
     """
     Comprueba si el binario FFmpeg está disponible.
     Busca en:
-    1. Directorio de la aplicación (versión portable / .EXE).
-    2. PATH del sistema.
-    3. Variables de entorno personalizadas (FFMPG, FFMPEG, FFMPEG_PATH, etc.).
-    4. Rutas comunes de instalación en Windows (C:\ffmpeg\bin, etc.).
-    Si lo encuentra, inyecta su directorio en os.environ["PATH"] para yt-dlp.
+    1. Directorio de bibliotecas nativas de Android (lib/arm64-v8a/libffmpeg.so).
+    2. Directorio de la aplicación (versión portable / .EXE).
+    3. PATH del sistema.
+    4. Variables de entorno personalizadas (FFMPG, FFMPEG, FFMPEG_PATH, etc.).
+    5. Rutas comunes de instalación en Windows (C:\ffmpeg\bin, etc.).
+    Si lo encuentra, inyecta su directorio en os.environ["PATH"] y LD_LIBRARY_PATH.
     """
+    # 0. Comprobar en Android (biblioteca nativa extraída en nativeLibraryDir)
+    if is_android():
+        android_candidates = []
+        try:
+            from jnius import autoclass
+            PythonActivity = autoclass("org.kivy.android.PythonActivity")
+            activity = PythonActivity.mActivity
+            if activity:
+                native_dir = activity.getApplicationInfo().nativeLibraryDir
+                if native_dir and os.path.isdir(native_dir):
+                    android_candidates.append(native_dir)
+        except Exception as e:
+            log_msg(f"check_ffmpeg: JNI nativeLibraryDir lookup: {e}")
+
+        for pkg in ["org.downloader.ytdownloaderpro", "org.aegea.ytdownloaderpro"]:
+            android_candidates.extend([
+                f"/data/data/{pkg}/lib",
+                f"/data/user/0/{pkg}/lib",
+            ])
+
+        ld_paths = os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
+        android_candidates.extend([p for p in ld_paths if p and os.path.isdir(p)])
+
+        for dir_path in android_candidates:
+            if not os.path.isdir(dir_path):
+                continue
+            for bin_name in ["libffmpeg.so", "libffmpegbin.so", "ffmpeg"]:
+                full_bin = os.path.join(dir_path, bin_name)
+                if os.path.isfile(full_bin):
+                    # Asegurar permisos de ejecución
+                    try:
+                        os.chmod(full_bin, 0o755)
+                    except Exception:
+                        pass
+                    # Inyectar directorio en LD_LIBRARY_PATH y PATH
+                    curr_ld = os.environ.get("LD_LIBRARY_PATH", "")
+                    if dir_path not in curr_ld.split(os.pathsep):
+                        os.environ["LD_LIBRARY_PATH"] = f"{dir_path}{os.pathsep}{curr_ld}".rstrip(os.pathsep)
+                    curr_path = os.environ.get("PATH", "")
+                    if dir_path not in curr_path.split(os.pathsep):
+                        os.environ["PATH"] = f"{dir_path}{os.pathsep}{curr_path}".rstrip(os.pathsep)
+                    log_msg(f"FFmpeg encontrado en Android: {full_bin}")
+                    return (True, full_bin)
+
     # 1. Comprobar en el directorio de la aplicación o subcarpeta bin
     search_dirs = [
         BASE_DIR,

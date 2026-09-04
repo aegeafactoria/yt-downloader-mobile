@@ -20,7 +20,7 @@ version = 2.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,kivymd==1.2.0,yt-dlp,certifi,urllib3,idna,charset_normalizer,plyer,pillow,requests
+requirements = python3,kivy,kivymd==1.2.0,ffmpeg,yt-dlp,certifi,urllib3,idna,charset_normalizer,plyer,pillow,requests
 
 # (str) Custom p4a local recipes directory
 p4a.local_recipes = ./p4a_recipes

@@ -501,16 +501,21 @@ class YTDownloaderApp(MDApp):
         # Load yt-dlp asynchronously in background to avoid blocking Android startup UI thread
         threading.Thread(target=self._load_ytdlp_async, daemon=True).start()
 
-        # Diagnóstico y comprobación de actualizaciones en Desktop
+        # Diagnóstico de FFmpeg
+        try:
+            import dependency_manager
+            ff_ok, ff_path = dependency_manager.check_ffmpeg()
+            if ff_ok:
+                self.append_log(f"🎬 FFmpeg activo: {os.path.basename(ff_path)} (conversión MP3 habilitada)")
+            else:
+                self.append_log("⚠️ FFmpeg no encontrado. Necesario para conversión a MP3.")
+        except Exception as e:
+            self.append_log(f"⚠️ Diagnóstico FFmpeg: {str(e)}")
+
+        # Comprobación de actualizaciones en Desktop
         if platform != 'android':
             try:
                 import dependency_manager
-                ff_ok, ff_path = dependency_manager.check_ffmpeg()
-                if ff_ok:
-                    self.append_log(f"🎬 FFmpeg detectado: {os.path.basename(ff_path)}")
-                else:
-                    self.append_log("⚠️ FFmpeg no encontrado en PATH del sistema. Es recomendable para conversiones.")
-
                 if not dependency_manager.is_frozen():
                     threading.Thread(target=self._check_updates_background, daemon=True).start()
                 else:
@@ -805,17 +810,22 @@ class YTDownloaderApp(MDApp):
 
         # Comprobar disponibilidad de FFmpeg
         ff_ok = False
-        ff_dir = None
+        ff_path = None
         try:
             import dependency_manager
             ff_ok, ff_path = dependency_manager.check_ffmpeg()
-            if ff_ok and ff_path:
-                ff_dir = os.path.dirname(ff_path)
         except Exception:
             pass
 
+        if ff_ok and ff_path:
+            self.append_log(f"🎵 Conversión a MP3 activa ({os.path.basename(ff_path)})...")
+            fmt = 'bestaudio/best'
+        else:
+            self.append_log("⚠️ FFmpeg no disponible: descargando mejor pista de audio directa...")
+            fmt = 'ba[ext=m4a]/ba[ext=mp3]/ba/bestaudio'
+
         opts = {
-            'format': 'bestaudio/best',
+            'format': fmt,
             'outtmpl': os.path.join(path, '%(title)s.%(ext)s'),
             'noplaylist': noplaylist,
             'extractor_args': {
@@ -829,14 +839,13 @@ class YTDownloaderApp(MDApp):
             'nocheckcertificate': True,
         }
 
-        if ff_ok:
+        if ff_ok and ff_path:
             opts['postprocessors'] = [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
                 'preferredquality': quality,
             }]
-            if ff_dir:
-                opts['ffmpeg_location'] = ff_dir
+            opts['ffmpeg_location'] = ff_path
 
         with yt_dlp.YoutubeDL(opts) as ydl:
             res = ydl.download([url])
@@ -849,16 +858,14 @@ class YTDownloaderApp(MDApp):
 
         # Comprobar disponibilidad de FFmpeg
         ff_ok = False
-        ff_dir = None
+        ff_path = None
         try:
             import dependency_manager
             ff_ok, ff_path = dependency_manager.check_ffmpeg()
-            if ff_ok and ff_path:
-                ff_dir = os.path.dirname(ff_path)
         except Exception:
             pass
 
-        if ff_ok:
+        if ff_ok and ff_path:
             fmt = f"bestvideo[height<={quality}]+bestaudio/best[height<={quality}]/best"
         else:
             fmt = f"best[height<={quality}]/best"
@@ -878,10 +885,9 @@ class YTDownloaderApp(MDApp):
             'nocheckcertificate': True,
         }
 
-        if ff_ok:
+        if ff_ok and ff_path:
             opts['merge_output_format'] = 'mp4'
-            if ff_dir:
-                opts['ffmpeg_location'] = ff_dir
+            opts['ffmpeg_location'] = ff_path
 
         with yt_dlp.YoutubeDL(opts) as ydl:
             res = ydl.download([url])
